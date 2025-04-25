@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Manrope, Outfit } from 'next/font/google';
 import ClientLayout from './ClientLayout';
 import ThemeRegistry from './ThemeRegistry';
+import { Providers } from './providers';
 import "./globals.css";
 
 const manrope = Manrope({
@@ -37,11 +38,13 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${manrope.variable} ${outfit.variable}`}>
       <body>
-        <ThemeRegistry>
-          <ClientLayout>
-            {children}
-          </ClientLayout>
-        </ThemeRegistry>
+        <Providers>
+          <ThemeRegistry>
+            <ClientLayout>
+              {children}
+            </ClientLayout>
+          </ThemeRegistry>
+        </Providers>
       </body>
     </html>
   );

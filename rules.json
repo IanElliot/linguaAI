@@ -1,48 +1,57 @@
 {
     "project": "LinguaAI - Voice-Based Language Tutor App",
     "layout": {
-      "goal": "Keep global layout clean, voice-first, and brand-consistent.",
+      "goal": "Keep app layout clean, minimal, and voice-first.",
       "rules": [
         "Use MUI ThemeProvider and CssBaseline at the root layout level.",
-        "Wrap pages in <main> with minHeight 100vh using Box or Container.",
-        "Center authentication flows vertically and horizontally.",
-        "Background color for auth pages should be warm and welcoming (e.g., soft beige).",
-        "Avoid adding global navbars/footers unless explicitly instructed."
+        "Use Box or Container to structure page layouts with minHeight 100vh.",
+        "Authentication pages should have a centered form over a soft beige background.",
+        "Avoid persistent navbars or footers unless explicitly requested."
       ]
     },
     "components": {
-      "goal": "Promote modularity and DRY principles in UI components.",
+      "goal": "Create modular, scalable, and DRY components.",
       "rules": [
-        "Extract repeated UI patterns (e.g., auth headers, social login buttons) into reusable components inside /components directory.",
-        "Accept props like 'action' or 'text' to make components flexible without duplication.",
-        "Use descriptive component names (e.g., AuthHeading, SocialLogin).",
-        "Keep components small and focused (single responsibility principle)."
+        "Organize components into feature-based folders (e.g., /components/auth/).",
+        "Extract repeated UI like headers, text fields, and social login buttons into reusable components.",
+        "Prefer passing props for flexibility instead of duplicating components.",
+        "Use semantic component names (e.g., AuthHeading, FormTextField).",
+        "Small focused components: each should have a single responsibility."
       ]
     },
     "styling": {
-      "goal": "Maintain visual consistency and easy theming.",
+      "goal": "Maintain global visual consistency through the MUI theme.",
       "rules": [
-        "Move hardcoded brand colors into the MUI theme palette.",
-        "Use theme.palette.primary.main for LinguaAI brand color instead of hex codes.",
-        "Prefer using sx prop for MUI styling unless complexity requires styled-components.",
-        "Font styling: Use 'Manrope' or 'Inter' for body text, 'Outfit' for brand elements."
+        "Move brand colors into MUI theme.palette (e.g., primary.main for LinguaAI orange).",
+        "Import Google Fonts via @next/font/google in app/layout.tsx.",
+        "Use 'Manrope' or 'Inter' for general text, 'Outfit' for brand name elements.",
+        "Use sx prop for lightweight styling, styled() API if complexity increases."
       ]
     },
     "forms": {
-      "goal": "Ensure accessibility, validation, and clean form logic.",
+      "goal": "Build accessible, clean, and validated forms.",
       "rules": [
-        "Use controlled components for forms (e.g., TextField with value/onChange).",
-        "Set input type where appropriate (e.g., type='email' for email fields).",
-        "Validate form input client-side before submit. Extract validation logic into utilities or hooks if reused.",
-        "Do not duplicate form error handling — prefer centralized logic."
+        "Use controlled components with value/onChange.",
+        "Use appropriate input types (type='email' for email fields).",
+        "Centralize form validation logic into hooks (e.g., useAuthForm).",
+        "Show validation errors with MUI helperText inline styling."
       ]
     },
     "api": {
-      "goal": "Protect clean server/client boundaries and API interactions.",
+      "goal": "Separate server interaction logic from UI components.",
       "rules": [
-        "Separate API interaction logic from form UI. Place in /lib/api or similar.",
-        "Use async/await for API calls.",
-        "Handle errors gracefully and surface basic feedback to users (e.g., snackbars, inline errors)."
+        "Organize API functions in /lib/api/ (e.g., signIn, signUp endpoints).",
+        "Use async/await pattern and handle errors gracefully.",
+        "Keep API call logic out of UI components whenever possible."
+      ]
+    },
+    "assets": {
+      "goal": "Keep media assets organized and brand-focused.",
+      "rules": [
+        "Store SVG backgrounds in /public/patterns/.",
+        "Use subtle, brand-aligned patterns or gradients for auth page backgrounds.",
+        "Keep image and asset usage optimized and minimal."
       ]
     }
   }
+  

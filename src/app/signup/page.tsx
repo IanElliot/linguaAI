@@ -7,6 +7,7 @@ import {
   Button,
   Typography,
   Link,
+  Alert,
 } from '@mui/material';
 import FormTextField from '../components/FormTextField';
 import AuthLayout from '../components/AuthLayout';
@@ -27,6 +28,8 @@ export default function SignUp() {
     password: '',
     confirmPassword: '',
   });
+  const [apiError, setApiError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -39,6 +42,7 @@ export default function SignUp() {
       ...prev,
       [name]: '',
     }));
+    setApiError(null);
   };
 
   const validateForm = () => {
@@ -83,11 +87,38 @@ export default function SignUp() {
     return isValid;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (validateForm()) {
-      console.log('Form submitted:', formData);
-      // TODO: Add API call here
+    if (!validateForm()) return;
+
+    setIsSubmitting(true);
+    setApiError(null);
+
+    try {
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          fullName: formData.fullName,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Something went wrong');
+      }
+
+      // Redirect to signin page on success
+      router.push('/signin?registered=true');
+    } catch (error) {
+      setApiError(error instanceof Error ? error.message : 'Something went wrong');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -106,6 +137,16 @@ export default function SignUp() {
       >
         Start your language learning journey today.
       </Typography>
+
+      {apiError && (
+        <Alert 
+          severity="error" 
+          sx={{ mb: 3 }}
+          onClose={() => setApiError(null)}
+        >
+          {apiError}
+        </Alert>
+      )}
 
       <Box 
         component="form" 
@@ -128,6 +169,7 @@ export default function SignUp() {
           onChange={handleChange}
           error={!!errors.fullName}
           helperText={errors.fullName}
+          disabled={isSubmitting}
         />
         <FormTextField
           required
@@ -139,6 +181,7 @@ export default function SignUp() {
           onChange={handleChange}
           error={!!errors.email}
           helperText={errors.email}
+          disabled={isSubmitting}
         />
         <FormTextField
           required
@@ -151,6 +194,7 @@ export default function SignUp() {
           onChange={handleChange}
           error={!!errors.password}
           helperText={errors.password}
+          disabled={isSubmitting}
         />
         <FormTextField
           required
@@ -163,11 +207,13 @@ export default function SignUp() {
           onChange={handleChange}
           error={!!errors.confirmPassword}
           helperText={errors.confirmPassword}
+          disabled={isSubmitting}
         />
         <Button
           type="submit"
           fullWidth
           variant="contained"
+          disabled={isSubmitting}
           sx={{ 
             mt: 1,
             py: 1.5,
@@ -182,7 +228,7 @@ export default function SignUp() {
             },
           }}
         >
-          Create Account
+          {isSubmitting ? 'Creating Account...' : 'Create Account'}
         </Button>
       </Box>
 

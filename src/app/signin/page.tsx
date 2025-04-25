@@ -1,12 +1,14 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { signIn } from 'next-auth/react';
 import {
   Box,
   Button,
   Typography,
   Link,
+  Alert,
 } from '@mui/material';
 import FormTextField from '../components/FormTextField';
 import AuthLayout from '../components/AuthLayout';
@@ -15,6 +17,7 @@ import AuthHeading from '../components/AuthHeading';
 
 export default function SignIn() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -23,6 +26,8 @@ export default function SignIn() {
     email: '',
     password: '',
   });
+  const [apiError, setApiError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -35,6 +40,7 @@ export default function SignIn() {
       ...prev,
       [name]: '',
     }));
+    setApiError(null);
   };
 
   const validateForm = () => {
@@ -61,11 +67,35 @@ export default function SignIn() {
     return isValid;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (validateForm()) {
-      console.log('Form submitted:', formData);
-      // TODO: Add API call here
+    if (!validateForm()) return;
+
+    setIsSubmitting(true);
+    setApiError(null);
+
+    try {
+      console.log('Attempting sign in...');
+      const result = await signIn('credentials', {
+        email: formData.email,
+        password: formData.password,
+        redirect: false,
+      });
+
+      console.log('Sign in result:', result);
+
+      if (result?.error) {
+        setApiError(result.error);
+      } else if (result?.ok) {
+        console.log('Sign in successful, redirecting...');
+        // Force a full page refresh and redirect
+        window.location.href = '/dashboard';
+      }
+    } catch (error) {
+      console.error('Sign in error:', error);
+      setApiError('An unexpected error occurred');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -84,6 +114,34 @@ export default function SignIn() {
       >
         Start learning a new language the natural way — through conversation.
       </Typography>
+
+      {searchParams.get('registered') && (
+        <Alert 
+          severity="success" 
+          sx={{ mb: 3 }}
+        >
+          Account created successfully! Please sign in.
+        </Alert>
+      )}
+
+      {searchParams.get('error') && (
+        <Alert 
+          severity="error" 
+          sx={{ mb: 3 }}
+        >
+          {searchParams.get('error')}
+        </Alert>
+      )}
+
+      {apiError && (
+        <Alert 
+          severity="error" 
+          sx={{ mb: 3 }}
+          onClose={() => setApiError(null)}
+        >
+          {apiError}
+        </Alert>
+      )}
 
       <Box 
         component="form" 
@@ -106,6 +164,7 @@ export default function SignIn() {
           onChange={handleChange}
           error={!!errors.email}
           helperText={errors.email}
+          disabled={isSubmitting}
         />
         <FormTextField
           required
@@ -118,11 +177,13 @@ export default function SignIn() {
           onChange={handleChange}
           error={!!errors.password}
           helperText={errors.password}
+          disabled={isSubmitting}
         />
         <Button
           type="submit"
           fullWidth
           variant="contained"
+          disabled={isSubmitting}
           sx={{ 
             mt: 1,
             py: 1.5,
@@ -137,7 +198,7 @@ export default function SignIn() {
             },
           }}
         >
-          Continue
+          {isSubmitting ? 'Signing in...' : 'Continue'}
         </Button>
       </Box>
 
