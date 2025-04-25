@@ -1,0 +1,34 @@
+{
+    "project": "LinguaAI - Voice-Based Language Tutor App",
+    "layout": {
+      "goal": "Keep global layout clean and voice-focused. Do not clutter with unused boilerplate.",
+      "rules": [
+        "Use MUI ThemeProvider and CssBaseline at the root layout level.",
+        "Wrap content in a <main> element with minHeight set to 100vh using MUI Box or styled div.",
+        "Do not include NavBar or Footer unless explicitly told to.",
+        "Ensure layout.tsx only contains global wrappers, theme providers, and children.",
+        "Use MUI's responsive design tools to ensure layout works well on mobile.",
+        "Avoid adding static content to the layout unless requested (e.g., no hardcoded headings or descriptions).",
+        "Only import fonts or global styles if specified.",
+        "If modifying metadata, only update title and description relevant to a language learning app.",
+        "Always preserve the 'children' prop and make sure the layout works with dynamic routes."
+      ]
+    },
+    "mui": {
+      "rules": [
+        "Use MUI v5 components only.",
+        "Avoid deprecated styling approaches like makeStyles.",
+        "Prefer ThemeProvider and createTheme for global theming.",
+        "Use CssBaseline for consistent base styles."
+      ]
+    },
+    "appRouter": {
+      "rules": [
+        "Use Next.js App Router conventions only (e.g., app/layout.tsx, app/page.tsx).",
+        "Keep layout.tsx minimal and focused on global concerns.",
+        "Do not use Turbopack.",
+        "Respect file-based routing structure and avoid creating pages without confirmation."
+      ]
+    }
+  }
+  
