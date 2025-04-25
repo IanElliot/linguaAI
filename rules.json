@@ -1,34 +1,48 @@
 {
     "project": "LinguaAI - Voice-Based Language Tutor App",
     "layout": {
-      "goal": "Keep global layout clean and voice-focused. Do not clutter with unused boilerplate.",
+      "goal": "Keep global layout clean, voice-first, and brand-consistent.",
       "rules": [
         "Use MUI ThemeProvider and CssBaseline at the root layout level.",
-        "Wrap content in a <main> element with minHeight set to 100vh using MUI Box or styled div.",
-        "Do not include NavBar or Footer unless explicitly told to.",
-        "Ensure layout.tsx only contains global wrappers, theme providers, and children.",
-        "Use MUI's responsive design tools to ensure layout works well on mobile.",
-        "Avoid adding static content to the layout unless requested (e.g., no hardcoded headings or descriptions).",
-        "Only import fonts or global styles if specified.",
-        "If modifying metadata, only update title and description relevant to a language learning app.",
-        "Always preserve the 'children' prop and make sure the layout works with dynamic routes."
+        "Wrap pages in <main> with minHeight 100vh using Box or Container.",
+        "Center authentication flows vertically and horizontally.",
+        "Background color for auth pages should be warm and welcoming (e.g., soft beige).",
+        "Avoid adding global navbars/footers unless explicitly instructed."
       ]
     },
-    "mui": {
+    "components": {
+      "goal": "Promote modularity and DRY principles in UI components.",
       "rules": [
-        "Use MUI v5 components only.",
-        "Avoid deprecated styling approaches like makeStyles.",
-        "Prefer ThemeProvider and createTheme for global theming.",
-        "Use CssBaseline for consistent base styles."
+        "Extract repeated UI patterns (e.g., auth headers, social login buttons) into reusable components inside /components directory.",
+        "Accept props like 'action' or 'text' to make components flexible without duplication.",
+        "Use descriptive component names (e.g., AuthHeading, SocialLogin).",
+        "Keep components small and focused (single responsibility principle)."
       ]
     },
-    "appRouter": {
+    "styling": {
+      "goal": "Maintain visual consistency and easy theming.",
       "rules": [
-        "Use Next.js App Router conventions only (e.g., app/layout.tsx, app/page.tsx).",
-        "Keep layout.tsx minimal and focused on global concerns.",
-        "Do not use Turbopack.",
-        "Respect file-based routing structure and avoid creating pages without confirmation."
+        "Move hardcoded brand colors into the MUI theme palette.",
+        "Use theme.palette.primary.main for LinguaAI brand color instead of hex codes.",
+        "Prefer using sx prop for MUI styling unless complexity requires styled-components.",
+        "Font styling: Use 'Manrope' or 'Inter' for body text, 'Outfit' for brand elements."
+      ]
+    },
+    "forms": {
+      "goal": "Ensure accessibility, validation, and clean form logic.",
+      "rules": [
+        "Use controlled components for forms (e.g., TextField with value/onChange).",
+        "Set input type where appropriate (e.g., type='email' for email fields).",
+        "Validate form input client-side before submit. Extract validation logic into utilities or hooks if reused.",
+        "Do not duplicate form error handling — prefer centralized logic."
+      ]
+    },
+    "api": {
+      "goal": "Protect clean server/client boundaries and API interactions.",
+      "rules": [
+        "Separate API interaction logic from form UI. Place in /lib/api or similar.",
+        "Use async/await for API calls.",
+        "Handle errors gracefully and surface basic feedback to users (e.g., snackbars, inline errors)."
       ]
     }
   }
-  

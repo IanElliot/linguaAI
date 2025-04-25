@@ -13,15 +13,19 @@ import AuthLayout from '../components/AuthLayout';
 import SocialLogin from '../components/SocialLogin';
 import AuthHeading from '../components/AuthHeading';
 
-export default function SignIn() {
+export default function SignUp() {
   const router = useRouter();
   const [formData, setFormData] = useState({
+    fullName: '',
     email: '',
     password: '',
+    confirmPassword: '',
   });
   const [errors, setErrors] = useState({
+    fullName: '',
     email: '',
     password: '',
+    confirmPassword: '',
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -39,10 +43,17 @@ export default function SignIn() {
 
   const validateForm = () => {
     const newErrors = {
+      fullName: '',
       email: '',
       password: '',
+      confirmPassword: '',
     };
     let isValid = true;
+
+    if (!formData.fullName) {
+      newErrors.fullName = 'Full name is required';
+      isValid = false;
+    }
 
     if (!formData.email) {
       newErrors.email = 'Email is required';
@@ -54,6 +65,17 @@ export default function SignIn() {
 
     if (!formData.password) {
       newErrors.password = 'Password is required';
+      isValid = false;
+    } else if (formData.password.length < 8) {
+      newErrors.password = 'Password must be at least 8 characters';
+      isValid = false;
+    }
+
+    if (!formData.confirmPassword) {
+      newErrors.confirmPassword = 'Please confirm your password';
+      isValid = false;
+    } else if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
       isValid = false;
     }
 
@@ -71,7 +93,7 @@ export default function SignIn() {
 
   return (
     <AuthLayout>
-      <AuthHeading action="Log in to" />
+      <AuthHeading action="Create your" />
       
       <Typography 
         variant="subtitle1" 
@@ -82,7 +104,7 @@ export default function SignIn() {
           fontWeight: 400,
         }}
       >
-        Start learning a new language the natural way — through conversation.
+        Start your language learning journey today.
       </Typography>
 
       <Box 
@@ -97,11 +119,22 @@ export default function SignIn() {
       >
         <FormTextField
           required
+          id="fullName"
+          label="Full Name"
+          name="fullName"
+          autoComplete="name"
+          autoFocus
+          value={formData.fullName}
+          onChange={handleChange}
+          error={!!errors.fullName}
+          helperText={errors.fullName}
+        />
+        <FormTextField
+          required
           id="email"
           label="Email Address"
           name="email"
           autoComplete="email"
-          autoFocus
           value={formData.email}
           onChange={handleChange}
           error={!!errors.email}
@@ -113,11 +146,23 @@ export default function SignIn() {
           label="Password"
           type="password"
           id="password"
-          autoComplete="current-password"
+          autoComplete="new-password"
           value={formData.password}
           onChange={handleChange}
           error={!!errors.password}
           helperText={errors.password}
+        />
+        <FormTextField
+          required
+          name="confirmPassword"
+          label="Confirm Password"
+          type="password"
+          id="confirmPassword"
+          autoComplete="new-password"
+          value={formData.confirmPassword}
+          onChange={handleChange}
+          error={!!errors.confirmPassword}
+          helperText={errors.confirmPassword}
         />
         <Button
           type="submit"
@@ -137,11 +182,11 @@ export default function SignIn() {
             },
           }}
         >
-          Continue
+          Create Account
         </Button>
       </Box>
 
-      <SocialLogin text="or log in with" />
+      <SocialLogin text="or sign up with" />
 
       <Typography 
         variant="body2" 
@@ -151,10 +196,10 @@ export default function SignIn() {
           mb: 3,
         }}
       >
-        New to LinguaAI?{' '}
+        Already have an account?{' '}
         <Link
           component="button"
-          onClick={() => router.push('/signup')}
+          onClick={() => router.push('/signin')}
           sx={{ 
             color: 'primary.main',
             textDecoration: 'none',
@@ -162,7 +207,7 @@ export default function SignIn() {
             '&:hover': { textDecoration: 'underline' }
           }}
         >
-          Sign up now
+          Sign in
         </Link>
       </Typography>
 
