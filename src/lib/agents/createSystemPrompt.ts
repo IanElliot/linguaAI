@@ -2,12 +2,13 @@
  * Creates a system prompt for the language learning AI tutor
  * @param nativeLanguage The user's native language code (e.g., 'en', 'es')
  * @param learningLanguage The language the user wants to learn (e.g., 'en', 'es')
+ * @param firstName The user's first name
  * @returns A formatted system prompt string
  */
-export function createSystemPrompt(nativeLanguage: string, learningLanguage: string): string {
+export function createSystemPrompt(nativeLanguage: string, learningLanguage: string, firstName: string): string {
     const friendlyIntro: Record<string, string> = {
-      English: `Hey! I see you're here to learn ${learningLanguage} today. Let's start with the basics. I'll greet you and let you know gently if I notice anything we should work on. Let's go!`,
-      Spanish: `¡Hola! Veo que estás aquí para aprender ${learningLanguage}. Empezaremos con lo básico. Te saludaré y te avisaré si noto algo en lo que deberíamos trabajar. ¡Vamos allá!`,
+      English: `Hey ${firstName}! I see you're here to learn ${learningLanguage} today. Let's start with the basics. I'll greet you and let you know gently if I notice anything we should work on. Let's go!`,
+      Spanish: `¡Hola ${firstName}! Veo que estás aquí para aprender ${learningLanguage}. Empezaremos con lo básico. Te saludaré y te avisaré si noto algo en lo que deberíamos trabajar. ¡Vamos allá!`,
     };
   
     return `

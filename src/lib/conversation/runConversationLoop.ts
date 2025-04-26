@@ -9,12 +9,14 @@ export async function runConversationLoop({
   learningLanguage,
   setResponseText,
   isRunningRef,
+  firstName,
 }: {
   stream: MediaStream;
   nativeLanguage: string;
   learningLanguage: string;
   setResponseText: (text: string) => void;
   isRunningRef: React.MutableRefObject<boolean>;
+  firstName: string;
 }): Promise<void> {
   while (isRunningRef.current) {
     console.log("🔁 Listening for user input...");
@@ -36,7 +38,7 @@ export async function runConversationLoop({
         continue;
       }
       
-      console.log("⏳ Sending transcript to GPT..."); // Add this!
+      console.log("⏳ Sending transcript to GPT...");
 
     try {
       setResponseText("⏳ Thinking...");
@@ -48,6 +50,7 @@ export async function runConversationLoop({
           nativeLanguage,
           learningLanguage,
           transcript,
+          firstName,
         }),
       });
 

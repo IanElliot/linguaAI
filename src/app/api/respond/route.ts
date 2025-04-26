@@ -10,12 +10,13 @@ const openai = new OpenAI({
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { nativeLanguage, learningLanguage, transcript } = body;
+  const { nativeLanguage, learningLanguage, transcript, firstName } = body;
 
   console.log("Received POST to /api/respond with:", {
     nativeLanguage,
     learningLanguage,
-    transcript
+    transcript,
+    firstName
   });
 
   if (!nativeLanguage || !learningLanguage) {
@@ -26,12 +27,12 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const systemPrompt = createSystemPrompt(nativeLanguage, learningLanguage);
-    const introText = createInitialGreeting(nativeLanguage, learningLanguage);
+    const systemPrompt = createSystemPrompt(nativeLanguage, learningLanguage, firstName);
+    const introText = createInitialGreeting(nativeLanguage, learningLanguage, firstName);
 
     console.log(introText);
 
-    const fullSystemPrompt = `${systemPrompt}\n\nStart by saying:\n"${createInitialGreeting(nativeLanguage, learningLanguage)}"`;
+    const fullSystemPrompt = `${systemPrompt}\n\nStart by saying:\n"${introText}"`;
 
     const messages = transcript.trim()
       ? [

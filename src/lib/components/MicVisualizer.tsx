@@ -21,7 +21,8 @@ export default function MicVisualizer({ stream, isSpeaking = false }: MicVisuali
     // Initialize audio context and analyzer
     audioContextRef.current = new AudioContext();
     analyserRef.current = audioContextRef.current.createAnalyser();
-    analyserRef.current.fftSize = 256;
+    analyserRef.current.fftSize = 128; // Smaller FFT size for faster processing
+    analyserRef.current.smoothingTimeConstant = 0; // No smoothing for immediate response
     
     const source = audioContextRef.current.createMediaStreamSource(stream);
     source.connect(analyserRef.current);
@@ -32,9 +33,13 @@ export default function MicVisualizer({ stream, isSpeaking = false }: MicVisuali
       const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
       analyserRef.current.getByteFrequencyData(dataArray);
       
-      // Calculate average volume
-      const average = dataArray.reduce((acc, val) => acc + val, 0) / dataArray.length;
-      const normalizedVolume = Math.min(average / 128, 1); // Normalize to 0-1 range
+      // Simplified volume calculation for better performance
+      let sum = 0;
+      for (let i = 0; i < dataArray.length; i++) {
+        sum += dataArray[i];
+      }
+      const average = sum / dataArray.length;
+      const normalizedVolume = Math.min(average / 32, 1); // More sensitive to lower volumes
       
       setVolume(normalizedVolume);
       animationFrameRef.current = requestAnimationFrame(updateVolume);
@@ -52,17 +57,13 @@ export default function MicVisualizer({ stream, isSpeaking = false }: MicVisuali
     };
   }, [stream]);
 
-  // Calculate circle size and glow based on volume or isSpeaking prop
+  // Calculate circle size and glow based on volume
   const size = stream 
-    ? (isSpeaking 
-      ? 80 + Math.sin(Date.now() / 500) * 10 // Pulsing effect for AI speaking
-      : 60 + volume * 40) // 60px to 100px based on volume
-    : 60; // Fixed size when inactive
+    ? 80 + volume * 40 // 80px to 120px based on volume (reduced max size)
+    : 80; // Fixed size when inactive
 
   const glowIntensity = stream
-    ? (isSpeaking
-      ? 20 + Math.sin(Date.now() / 500) * 5 // Pulsing glow for AI speaking
-      : 10 + volume * 15) // 10px to 25px glow based on volume
+    ? 5 + volume * 20 // 5px to 25px glow based on volume
     : 5; // Subtle glow when inactive
 
   return (
@@ -86,7 +87,7 @@ export default function MicVisualizer({ stream, isSpeaking = false }: MicVisuali
             : '#e0e0e0',
           backgroundSize: '400% 400%',
           boxShadow: `0 0 ${glowIntensity}px ${stream ? 'rgba(255, 107, 107, 0.5)' : 'rgba(224, 224, 224, 0.3)'}`,
-          transition: 'all 0.3s ease-out',
+          transition: 'all 0.05s ease-out', // Faster transitions for more responsive feel
           animation: stream ? 'gradientShift 8s ease infinite' : 'none',
           '@keyframes gradientShift': {
             '0%': { backgroundPosition: '0% 50%' },

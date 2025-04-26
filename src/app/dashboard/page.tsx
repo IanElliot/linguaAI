@@ -28,6 +28,7 @@ export default function Dashboard() {
       learningLanguage: desiredLanguage,
       setResponseText,
       isRunningRef,
+      firstName: session?.user?.name?.split(' ')[0] || 'there',
     });
   };
 
