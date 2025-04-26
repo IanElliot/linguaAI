@@ -1,42 +1,100 @@
 // lib/components/MicVisualizer.tsx
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { Box } from '@mui/material';
 
-export default function MicVisualizer({ stream }: { stream: MediaStream | null }) {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+interface MicVisualizerProps {
+  stream: MediaStream | null;
+  isSpeaking?: boolean;
+}
+
+export default function MicVisualizer({ stream, isSpeaking = false }: MicVisualizerProps) {
+  const [volume, setVolume] = useState(0);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const animationFrameRef = useRef<number>();
 
   useEffect(() => {
-    if (!stream || !canvasRef.current) return;
+    if (!stream) return;
 
-    const audioCtx = new AudioContext();
-    const source = audioCtx.createMediaStreamSource(stream);
-    const analyser = audioCtx.createAnalyser();
-    analyser.fftSize = 256;
-    source.connect(analyser);
+    // Initialize audio context and analyzer
+    audioContextRef.current = new AudioContext();
+    analyserRef.current = audioContextRef.current.createAnalyser();
+    analyserRef.current.fftSize = 256;
+    
+    const source = audioContextRef.current.createMediaStreamSource(stream);
+    source.connect(analyserRef.current);
 
-    const bufferLength = analyser.frequencyBinCount;
-    const dataArray = new Uint8Array(bufferLength);
-    const canvas = canvasRef.current;
-    const canvasCtx = canvas.getContext('2d')!;
+    const updateVolume = () => {
+      if (!analyserRef.current) return;
 
-    const draw = () => {
-      analyser.getByteFrequencyData(dataArray);
-      const volume = dataArray.reduce((a, b) => a + b) / bufferLength;
-
-      canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
-      canvasCtx.fillStyle = 'orange';
-      canvasCtx.fillRect(0, canvas.height - volume, canvas.width, volume);
-
-      requestAnimationFrame(draw);
+      const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
+      analyserRef.current.getByteFrequencyData(dataArray);
+      
+      // Calculate average volume
+      const average = dataArray.reduce((acc, val) => acc + val, 0) / dataArray.length;
+      const normalizedVolume = Math.min(average / 128, 1); // Normalize to 0-1 range
+      
+      setVolume(normalizedVolume);
+      animationFrameRef.current = requestAnimationFrame(updateVolume);
     };
 
-    draw();
+    updateVolume();
 
     return () => {
-      audioCtx.close();
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+      }
     };
   }, [stream]);
 
-  return <canvas ref={canvasRef} width={300} height={60} style={{ background: '#fff', borderRadius: '10px' }} />;
+  // Calculate circle size and glow based on volume or isSpeaking prop
+  const size = stream 
+    ? (isSpeaking 
+      ? 80 + Math.sin(Date.now() / 500) * 10 // Pulsing effect for AI speaking
+      : 60 + volume * 40) // 60px to 100px based on volume
+    : 60; // Fixed size when inactive
+
+  const glowIntensity = stream
+    ? (isSpeaking
+      ? 20 + Math.sin(Date.now() / 500) * 5 // Pulsing glow for AI speaking
+      : 10 + volume * 15) // 10px to 25px glow based on volume
+    : 5; // Subtle glow when inactive
+
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: '100%',
+        height: '150px',
+        position: 'relative',
+      }}
+    >
+      <Box
+        sx={{
+          width: size,
+          height: size,
+          borderRadius: '50%',
+          background: stream
+            ? 'linear-gradient(45deg, #ff6b6b, #ffa726, #ffd54f)'
+            : '#e0e0e0',
+          backgroundSize: '400% 400%',
+          boxShadow: `0 0 ${glowIntensity}px ${stream ? 'rgba(255, 107, 107, 0.5)' : 'rgba(224, 224, 224, 0.3)'}`,
+          transition: 'all 0.3s ease-out',
+          animation: stream ? 'gradientShift 8s ease infinite' : 'none',
+          '@keyframes gradientShift': {
+            '0%': { backgroundPosition: '0% 50%' },
+            '50%': { backgroundPosition: '100% 50%' },
+            '100%': { backgroundPosition: '0% 50%' },
+          },
+        }}
+      />
+    </Box>
+  );
 }

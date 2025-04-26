@@ -48,6 +48,7 @@ export default function Dashboard() {
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
+      justifyContent: 'center',
       py: 4,
     }}>
       <Box position="absolute" top="20px" left="20px">
@@ -64,6 +65,7 @@ export default function Dashboard() {
         maxWidth="600px" 
         width="100%" 
         p={3}
+        sx={{ transform: 'translateY(-10%)' }}
       >
         <Box display="flex" justifyContent="center" mb={3}>
           <Select 
@@ -124,22 +126,17 @@ export default function Dashboard() {
           </Box>
         )}
 
-        {stream && isRunning && (
-          <Box mb={3}>
-            <MicVisualizer stream={stream} />
-          </Box>
-        )}
+        <Box marginBottom="20px">
+          <MicVisualizer stream={stream} isSpeaking={isRunning} />
+        </Box>
 
         <IconButton 
-          sx={{ 
-            bgcolor: isRunning ? 'error.main' : (isLanguageSelectionComplete ? 'primary.main' : 'grey.300'),
-            color: 'white',
-            width: 60,
-            height: 60,
-            transition: 'all 0.3s',
-            '&:hover': {
-              bgcolor: isRunning ? 'error.dark' : (isLanguageSelectionComplete ? 'primary.dark' : 'grey.400'),
-            },
+          style={{ 
+            backgroundColor: isRunning ? 'red' : (isLanguageSelectionComplete ? 'orange' : '#cccccc'), 
+            color: 'white', 
+            width: '60px', 
+            height: '60px',
+            transition: 'background-color 0.3s'
           }}
           onClick={isRunning ? stopConversation : startConversation}
           disabled={!isLanguageSelectionComplete}
@@ -147,11 +144,7 @@ export default function Dashboard() {
           {isRunning ? <StopIcon /> : <MicIcon />}
         </IconButton>
 
-        {isRunning && (
-          <Typography sx={{ mt: 2, color: 'text.primary' }}>
-            Session active. Click to stop.
-          </Typography>
-        )}
+        {isRunning && <Typography style={{ marginTop: '10px', color: '#000000' }}>Session active. Click to stop.</Typography>}
       </Box>
     </Box>
   );

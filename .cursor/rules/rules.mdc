@@ -1,0 +1,106 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+[general]
+description = """
+LinguaAI is a conversational language learning app using Next.js (App Router), React, TypeScript, Prisma ORM, and OpenAI’s real-time API.
+Users can speak to a voice-based AI tutor, track their learning, and store conversations in a Postgres database.
+"""
+
+[rules]
+# Never touch these sensitive or config-heavy files
+disallow_editing = [
+  "prisma/schema.prisma",
+  ".env",
+  ".env.local",
+  "next.config.ts",
+  "tsconfig.json",
+  "eslint.config.mjs",
+  "public/",
+  "README.md"
+]
+
+# Only edit what's in scope for app features
+allow_editing = [
+  "src/app/",
+  "src/lib/",
+]
+
+# Avoid any destructive changes to low-level audio logic
+lock_files = [
+  "src/lib/audio/recordUntilSilent.ts",
+  "src/lib/audio/recordAndTranscribe.ts"
+]
+
+[principles]
+language = "TypeScript"
+frontend_framework = "Next.js with App Router"
+styling = "Material UI (MUI)"
+state_management = "React hooks and Context API only"
+database = "PostgreSQL with Prisma"
+api_routes_folder = "src/app/api"
+components_folder = "src/lib/components"
+agents_folder = "src/lib/agents"
+
+[naming]
+convention = "camelCase for variables/functions, PascalCase for components/types"
+
+[layout]
+goal = "Keep app layout clean, minimal, and voice-first."
+rules = [
+  "Use MUI ThemeProvider and CssBaseline at the root layout level.",
+  "Use Box or Container to structure page layouts with minHeight 100vh.",
+  "Authentication pages should have a centered form over a soft beige background.",
+  "Avoid persistent navbars or footers unless explicitly requested."
+]
+
+[components]
+goal = "Create modular, scalable, and DRY components."
+rules = [
+  "Organize components into feature-based folders (e.g., /components/auth/).",
+  "Extract repeated UI like headers, text fields, and social login buttons into reusable components.",
+  "Prefer passing props for flexibility instead of duplicating components.",
+  "Use semantic component names (e.g., AuthHeading, FormTextField).",
+  "Small focused components: each should have a single responsibility."
+]
+
+[styling]
+goal = "Maintain global visual consistency through the MUI theme."
+rules = [
+  "Move brand colors into MUI theme.palette (e.g., primary.main for LinguaAI orange).",
+  "Import Google Fonts via @next/font/google in app/layout.tsx.",
+  "Use 'Manrope' or 'Inter' for general text, 'Outfit' for brand name elements.",
+  "Use sx prop for lightweight styling, styled() API if complexity increases."
+]
+
+[forms]
+goal = "Build accessible, clean, and validated forms."
+rules = [
+  "Use controlled components with value/onChange.",
+  "Use appropriate input types (type='email' for email fields).",
+  "Centralize form validation logic into hooks (e.g., useAuthForm).",
+  "Show validation errors with MUI helperText inline styling."
+]
+
+[api]
+goal = "Separate server interaction logic from UI components."
+rules = [
+  "Organize API functions in /lib/api/ (e.g., signIn, signUp endpoints).",
+  "Use async/await pattern and handle errors gracefully.",
+  "Keep API call logic out of UI components whenever possible."
+]
+
+[assets]
+goal = "Keep media assets organized and brand-focused."
+rules = [
+  "Store SVG backgrounds in /public/patterns/.",
+  "Use subtle, brand-aligned patterns or gradients for auth page backgrounds.",
+  "Keep image and asset usage optimized and minimal."
+]
+
+[permissions]
+ask_before_dependency_install = true
+ask_before_large_refactor = true
+ask_before_editing_locked_files = true
