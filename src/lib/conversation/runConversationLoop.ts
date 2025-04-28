@@ -1,7 +1,16 @@
-// src/lib/conversation/runConversationLoop.ts
 import { recordUntilSilent } from '@/lib/audio/recordUntilSilent';
+import { ConversationMemory, MessageTurn } from '@/lib/conversation/ConversationMemory';
+import { CorrectionManager } from '@/lib/conversation/CorrectionManager';
+import { GoalManager } from '@/lib/conversation/GoalManager';
+// import { SpeedTracker } from '@/lib/conversation/SpeedTracker'; // Optional for now
 
 let currentAudio: HTMLAudioElement | null = null;
+
+// Initialize managers
+const memory = new ConversationMemory();
+const correctionManager = new CorrectionManager();
+const goalManager = new GoalManager();
+// const speedTracker = new SpeedTracker(); // Optional if you want early tracking
 
 export async function runConversationLoop({
   stream,
@@ -9,14 +18,12 @@ export async function runConversationLoop({
   learningLanguage,
   setResponseText,
   isRunningRef,
-  firstName,
 }: {
   stream: MediaStream;
   nativeLanguage: string;
   learningLanguage: string;
   setResponseText: (text: string) => void;
   isRunningRef: React.MutableRefObject<boolean>;
-  firstName: string;
 }): Promise<void> {
   while (isRunningRef.current) {
     console.log("🔁 Listening for user input...");
@@ -34,63 +41,68 @@ export async function runConversationLoop({
     if (!isRunningRef.current) break;
 
     if (!transcript || transcript.trim() === '...') {
-        console.warn("⚠️ Skipping empty or silence-only transcript.");
-        continue;
-      }
-      
-      console.log("⏳ Sending transcript to GPT...");
-
-    try {
-      setResponseText("⏳ Thinking...");
-
-      const response = await fetch("/api/respond", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          nativeLanguage,
-          learningLanguage,
-          transcript,
-          firstName,
-        }),
-      });
-
-      if (!isRunningRef.current) break;
-
-      const { reply } = await response.json();
-      console.log("🧠 Reply:", reply);
-      setResponseText(reply);
-
-      const audioRes = await fetch("/api/speak", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: reply }),
-      });
-
-      if (!isRunningRef.current) break;
-
-      const audioBlob = await audioRes.blob();
-      const audioUrl = URL.createObjectURL(audioBlob);
-      const audio = new Audio(audioUrl);
-      currentAudio = audio; // Save reference for cancellation
-
-      console.log("🔊 Playing audio...");
-      await audio.play();
-      await new Promise((res) => (audio.onended = res));
-
-      currentAudio = null;
-    } catch (err) {
-      console.error("❌ Error in GPT or TTS:", err);
-      setResponseText("Something went wrong. Please try again.");
-      break;
+      console.warn("⚠️ Skipping empty or silent input");
+      continue;
     }
+
+    // Save user input
+    memory.addTurn({ role: 'user', text: transcript });
+
+    // Check if correction is needed
+    let agentResponse: string;
+
+    if (correctionManager.shouldCorrect(transcript)) {
+      agentResponse = correctionManager.getCorrection(transcript);
+    } else {
+      // Generate agent response normally
+      agentResponse = await generateAgentResponse({
+        transcript,
+        memory,
+        goalManager,
+        nativeLanguage,
+        learningLanguage,
+      });
+    }
+
+    // Save agent response
+    memory.addTurn({ role: 'agent', text: agentResponse });
+
+    // (Optional) Track hesitations or error rates
+    // if (transcript.includes("uh") || transcript.includes("um")) {
+    //   speedTracker.registerHesitation();
+    // }
+
+    // Speak & display response
+    await speak(agentResponse, learningLanguage);
+    setResponseText(agentResponse);
   }
 }
 
-export function stopAudioPlayback() {
-  if (currentAudio) {
-    currentAudio.pause();
-    currentAudio.src = '';
-    currentAudio = null;
-    console.log("⛔ Audio playback interrupted.");
-  }
+// 🛠️ Mockup: Replace this with your real agent call
+async function generateAgentResponse({
+  transcript,
+  memory,
+  goalManager,
+  nativeLanguage,
+  learningLanguage,
+}: {
+  transcript: string;
+  memory: ConversationMemory;
+  goalManager: GoalManager;
+  nativeLanguage: string;
+  learningLanguage: string;
+}): Promise<string> {
+  const goal = goalManager.getGoal();
+  const lastFewTurns = memory.getRecentTurns();
+
+  // Later, send goal + history into your LLM agent
+  console.log("🎯 Current Goal:", goal);
+  console.log("🧠 Recent Turns:", lastFewTurns);
+
+  return `You said: "${transcript}". Let's keep going!`; // Placeholder agent response
+}
+
+// 🗣️ Mockup: Your real TTS function
+async function speak(text: string, language: string) {
+  console.log(`🎤 Speaking in ${language}:`, text);
 }

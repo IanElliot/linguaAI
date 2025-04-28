@@ -14,90 +14,49 @@ import FormTextField from '../components/FormTextField';
 import AuthLayout from '../components/AuthLayout';
 import SocialLogin from '../components/SocialLogin';
 import AuthHeading from '../components/AuthHeading';
+import { useAuthForm } from '../../lib/hooks/useAuthForm';
+import { SignInFormData } from '../../lib/validation/authSchemas';
 
 export default function SignIn() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
-  const [errors, setErrors] = useState({
-    email: '',
-    password: '',
-  });
   const [apiError, setApiError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-    // Clear error when user starts typing
-    setErrors((prev) => ({
-      ...prev,
-      [name]: '',
-    }));
-    setApiError(null);
-  };
+  const {
+    values,
+    errors,
+    touched,
+    isSubmitting,
+    handleChange,
+    handleBlur,
+    handleSubmit,
+  } = useAuthForm({
+    onSubmit: async (values: SignInFormData) => {
+      try {
+        console.log('Attempting sign in...');
+        const result = await signIn('credentials', {
+          email: values.email,
+          password: values.password,
+          redirect: false,
+        });
 
-  const validateForm = () => {
-    const newErrors = {
-      email: '',
-      password: '',
-    };
-    let isValid = true;
+        console.log('Sign in result:', result);
 
-    if (!formData.email) {
-      newErrors.email = 'Email is required';
-      isValid = false;
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email is invalid';
-      isValid = false;
-    }
+        if (result?.error) {
+          setApiError(result.error);
+          return;
+        }
 
-    if (!formData.password) {
-      newErrors.password = 'Password is required';
-      isValid = false;
-    }
-
-    setErrors(newErrors);
-    return isValid;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validateForm()) return;
-
-    setIsSubmitting(true);
-    setApiError(null);
-
-    try {
-      console.log('Attempting sign in...');
-      const result = await signIn('credentials', {
-        email: formData.email,
-        password: formData.password,
-        redirect: false,
-      });
-
-      console.log('Sign in result:', result);
-
-      if (result?.error) {
-        setApiError(result.error);
-      } else if (result?.ok) {
-        console.log('Sign in successful, redirecting...');
-        // Force a full page refresh and redirect
-        window.location.href = '/dashboard';
+        if (result?.ok) {
+          console.log('Sign in successful, redirecting...');
+          window.location.href = '/dashboard';
+        }
+      } catch (error) {
+        console.error('Sign in error:', error);
+        setApiError('An unexpected error occurred');
       }
-    } catch (error) {
-      console.error('Sign in error:', error);
-      setApiError('An unexpected error occurred');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+    },
+  });
 
   return (
     <AuthLayout>
@@ -160,10 +119,11 @@ export default function SignIn() {
           name="email"
           autoComplete="email"
           autoFocus
-          value={formData.email}
+          value={values.email}
           onChange={handleChange}
-          error={!!errors.email}
-          helperText={errors.email}
+          onBlur={() => handleBlur('email')}
+          error={touched.email && !!errors.email}
+          helperText={touched.email && errors.email}
           disabled={isSubmitting}
         />
         <FormTextField
@@ -173,10 +133,11 @@ export default function SignIn() {
           type="password"
           id="password"
           autoComplete="current-password"
-          value={formData.password}
+          value={values.password}
           onChange={handleChange}
-          error={!!errors.password}
-          helperText={errors.password}
+          onBlur={() => handleBlur('password')}
+          error={touched.password && !!errors.password}
+          helperText={touched.password && errors.password}
           disabled={isSubmitting}
         />
         <Button

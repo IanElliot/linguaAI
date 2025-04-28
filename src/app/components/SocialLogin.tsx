@@ -1,5 +1,3 @@
-'use client';
-
 import React from 'react';
 import { Box, Divider, IconButton, Typography } from '@mui/material';
 import GoogleIcon from '@mui/icons-material/Google';
