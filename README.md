@@ -1,9 +1,5 @@
 
 
-
-Uploading Screen Recording 2025-05-13 at 8.14.26 AM.mov…
-
-
 # LinguaAI
 
 **LinguaAI** is a voice-first language learning app that lets users practice speaking with a multilingual AI tutor in real time.  
