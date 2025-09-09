@@ -11,6 +11,7 @@ interface AuthFormState {
   errors: SignInFormErrors;
   isSubmitting: boolean;
   touched: Partial<Record<keyof SignInFormData, boolean>>;
+  hasAttemptedSubmit: boolean;
 }
 
 export function useAuthForm({ onSubmit }: UseAuthFormOptions) {
@@ -22,9 +23,14 @@ export function useAuthForm({ onSubmit }: UseAuthFormOptions) {
     errors: {},
     isSubmitting: false,
     touched: {},
+    hasAttemptedSubmit: false,
   });
 
   const validateField = useCallback((name: keyof SignInFormData, value: string) => {
+    if (!state.hasAttemptedSubmit && !state.touched[name]) {
+      return '';
+    }
+
     try {
       signInSchema.parse({ ...state.values, [name]: value });
       return '';
@@ -35,7 +41,7 @@ export function useAuthForm({ onSubmit }: UseAuthFormOptions) {
       }
       return '';
     }
-  }, [state.values]);
+  }, [state.values, state.hasAttemptedSubmit, state.touched]);
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -50,17 +56,23 @@ export function useAuthForm({ onSubmit }: UseAuthFormOptions) {
   }, [validateField]);
 
   const handleBlur = useCallback((name: keyof SignInFormData) => {
-    const error = validateField(name, state.values[name]);
-    setState((prev) => ({
-      ...prev,
-      errors: { ...prev.errors, [name]: error },
-      touched: { ...prev.touched, [name]: true },
-    }));
-  }, [validateField, state.values]);
+    if (state.hasAttemptedSubmit) {
+      const error = validateField(name, state.values[name]);
+      setState((prev) => ({
+        ...prev,
+        errors: { ...prev.errors, [name]: error },
+        touched: { ...prev.touched, [name]: true },
+      }));
+    }
+  }, [validateField, state.values, state.hasAttemptedSubmit]);
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
-    setState((prev) => ({ ...prev, isSubmitting: true }));
+    setState((prev) => ({ 
+      ...prev, 
+      isSubmitting: true,
+      hasAttemptedSubmit: true,
+    }));
 
     try {
       const validatedData = signInSchema.parse(state.values);
@@ -88,6 +100,7 @@ export function useAuthForm({ onSubmit }: UseAuthFormOptions) {
       errors: {},
       isSubmitting: false,
       touched: {},
+      hasAttemptedSubmit: false,
     });
   }, []);
 

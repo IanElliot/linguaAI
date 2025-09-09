@@ -13,47 +13,62 @@ export default function MicVisualizer({ stream, isSpeaking = false }: MicVisuali
   const [volume, setVolume] = useState(0);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
-  const animationFrameRef = useRef<number>();
+  const animationFrameRef = useRef<number>(0);
+  const micLoggerIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!stream) return;
-
-    // Initialize audio context and analyzer
-    audioContextRef.current = new AudioContext();
-    analyserRef.current = audioContextRef.current.createAnalyser();
-    analyserRef.current.fftSize = 128; // Smaller FFT size for faster processing
-    analyserRef.current.smoothingTimeConstant = 0; // No smoothing for immediate response
-    
-    const source = audioContextRef.current.createMediaStreamSource(stream);
-    source.connect(analyserRef.current);
-
+  
+    // Create one audio context and analyser
+    const audioContext = new AudioContext();
+    const analyser = audioContext.createAnalyser();
+    analyser.fftSize = 128;
+    analyser.smoothingTimeConstant = 0;
+  
+    const source = audioContext.createMediaStreamSource(stream);
+    source.connect(analyser);
+  
+    audioContextRef.current = audioContext;
+    analyserRef.current = analyser;
+  
+    const dataArray = new Uint8Array(analyser.frequencyBinCount);
+  
     const updateVolume = () => {
-      if (!analyserRef.current) return;
-
-      const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
-      analyserRef.current.getByteFrequencyData(dataArray);
-      
-      // Simplified volume calculation for better performance
+      analyser.getByteFrequencyData(dataArray);
+  
       let sum = 0;
       for (let i = 0; i < dataArray.length; i++) {
         sum += dataArray[i];
       }
       const average = sum / dataArray.length;
-      const normalizedVolume = Math.min(average / 32, 1); // More sensitive to lower volumes
-      
+      const normalizedVolume = Math.min(average / 32, 1);
+  
       setVolume(normalizedVolume);
       animationFrameRef.current = requestAnimationFrame(updateVolume);
     };
-
+  
     updateVolume();
-
+  
+    // Mic track debug
+    console.log('[LinguaAI] Mic stream tracks:', stream.getTracks());
+    stream.getAudioTracks().forEach(track => {
+      console.log('[LinguaAI] Audio track muted:', track.muted, 'enabled:', track.enabled, 'readyState:', track.readyState);
+      track.onmute = () => console.warn('[LinguaAI] Audio track muted');
+      track.onunmute = () => console.log('[LinguaAI] Audio track unmuted');
+      track.onended = () => console.warn('[LinguaAI] Audio track ended');
+    });
+  
+    // Volume logger
+    micLoggerIntervalRef.current = setInterval(() => {
+      analyser.getByteTimeDomainData(dataArray);
+      const rawAvg = dataArray.reduce((a, b) => a + b) / dataArray.length;
+      console.log('[LinguaAI] Mic average volume (raw):', rawAvg);
+    }, 1000);
+  
     return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-      if (audioContextRef.current) {
-        audioContextRef.current.close();
-      }
+      if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
+      if (micLoggerIntervalRef.current) clearInterval(micLoggerIntervalRef.current);
+      audioContext.close();
     };
   }, [stream]);
 

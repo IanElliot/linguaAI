@@ -5,7 +5,7 @@ import { startRealtimeSession } from '../realtime/startRealtimeSession';
  * Initializes a language learning session with OpenAI
  */
 export async function initializeLinguaSession(nativeLanguage: string, learningLanguage: string) {
-  const prompt = createSystemPrompt(nativeLanguage, learningLanguage);
+  const prompt = createSystemPrompt(nativeLanguage, learningLanguage, "there");
 
   await startRealtimeSession({
     system_instruction: prompt,

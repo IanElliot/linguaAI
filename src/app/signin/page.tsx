@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import {
@@ -17,7 +17,7 @@ import AuthHeading from '../components/AuthHeading';
 import { useAuthForm } from '../../lib/hooks/useAuthForm';
 import { SignInFormData } from '../../lib/validation/authSchemas';
 
-export default function SignIn() {
+function SignInContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [apiError, setApiError] = useState<string | null>(null);
@@ -30,6 +30,7 @@ export default function SignIn() {
     handleChange,
     handleBlur,
     handleSubmit,
+    reset,
   } = useAuthForm({
     onSubmit: async (values: SignInFormData) => {
       try {
@@ -57,6 +58,16 @@ export default function SignIn() {
       }
     },
   });
+
+  useEffect(() => {
+    reset();
+  }, [reset]);
+
+  const handleSignUpClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    reset();
+    router.push('/signup');
+  };
 
   return (
     <AuthLayout>
@@ -96,7 +107,6 @@ export default function SignIn() {
         <Alert 
           severity="error" 
           sx={{ mb: 3 }}
-          onClose={() => setApiError(null)}
         >
           {apiError}
         </Alert>
@@ -109,98 +119,82 @@ export default function SignIn() {
           width: '100%',
           display: 'flex',
           flexDirection: 'column',
-          gap: 2.5,
+          gap: 3,
         }}
       >
         <FormTextField
-          required
-          id="email"
-          label="Email Address"
           name="email"
-          autoComplete="email"
-          autoFocus
+          label="Email"
+          type="email"
           value={values.email}
           onChange={handleChange}
           onBlur={() => handleBlur('email')}
-          error={touched.email && !!errors.email}
-          helperText={touched.email && errors.email}
-          disabled={isSubmitting}
-        />
-        <FormTextField
+          error={!!errors.email}
+          helperText={errors.email}
           required
+          fullWidth
+        />
+
+        <FormTextField
           name="password"
           label="Password"
           type="password"
-          id="password"
-          autoComplete="current-password"
           value={values.password}
           onChange={handleChange}
           onBlur={() => handleBlur('password')}
-          error={touched.password && !!errors.password}
-          helperText={touched.password && errors.password}
-          disabled={isSubmitting}
+          error={!!errors.password}
+          helperText={errors.password}
+          required
+          fullWidth
         />
+
         <Button
           type="submit"
           fullWidth
           variant="contained"
           disabled={isSubmitting}
-          sx={{ 
-            mt: 1,
+          sx={{
             py: 1.5,
+            mb: 2,
+            fontSize: '1.1rem',
+            fontWeight: 600,
+            textTransform: 'none',
             borderRadius: '8px',
-            bgcolor: 'primary.main',
-            color: 'white',
-            fontWeight: 600,
-            transition: 'all 0.2s ease-in-out',
-            '&:hover': {
-              bgcolor: '#e67e00',
-              transform: 'scale(1.02)',
-            },
           }}
         >
-          {isSubmitting ? 'Signing in...' : 'Continue'}
+          {isSubmitting ? 'Signing in...' : 'Sign In'}
         </Button>
+
+        <SocialLogin text="or log in with" />
+
+        <Box sx={{ textAlign: 'center', mt: 2 }}>
+          <Typography variant="body2" color="text.secondary">
+            Don't have an account?{' '}
+            <Link
+              href="#"
+              onClick={handleSignUpClick}
+              sx={{
+                color: 'primary.main',
+                textDecoration: 'none',
+                fontWeight: 600,
+                '&:hover': {
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              Sign up
+            </Link>
+          </Typography>
+        </Box>
       </Box>
-
-      <SocialLogin text="or log in with" />
-
-      <Typography 
-        variant="body2" 
-        color="text.secondary" 
-        align="center"
-        sx={{ 
-          mb: 3,
-        }}
-      >
-        New to LinguaAI?{' '}
-        <Link
-          component="button"
-          onClick={() => router.push('/signup')}
-          sx={{ 
-            color: 'primary.main',
-            textDecoration: 'none',
-            fontWeight: 600,
-            '&:hover': { textDecoration: 'underline' }
-          }}
-        >
-          Sign up now
-        </Link>
-      </Typography>
-
-      <Typography 
-        variant="caption" 
-        color="text.secondary" 
-        align="center"
-        sx={{ 
-          maxWidth: '80%',
-        }}
-      >
-        By continuing, you agree to our{' '}
-        <Link href="/terms" sx={{ color: 'inherit' }}>Terms and Conditions</Link>
-        {' '}and{' '}
-        <Link href="/privacy" sx={{ color: 'inherit' }}>Privacy Policy</Link>
-      </Typography>
     </AuthLayout>
+  );
+}
+
+export default function SignIn() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <SignInContent />
+    </Suspense>
   );
 } 

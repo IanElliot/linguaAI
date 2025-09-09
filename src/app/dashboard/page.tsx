@@ -6,111 +6,82 @@ import { Select, MenuItem, IconButton, Typography, Box } from '@mui/material';
 import MicIcon from '@mui/icons-material/Mic';
 import StopIcon from '@mui/icons-material/Stop';
 import MicVisualizer from '@/lib/components/MicVisualizer';
-import { runConversationLoop, stopAudioPlayback } from '@/lib/conversation/runConversationLoop';
+import { useRealtimeChat } from '@/hooks/useRealtimeChat';
+import useWebRTCAudioSession from '@/hooks/useWebRTC';
+import Navbar from '../components/Navbar';
 
 export default function Dashboard() {
   const { data: session } = useSession();
   const [nativeLanguage, setNativeLanguage] = useState('');
   const [desiredLanguage, setDesiredLanguage] = useState('');
-  const [isRunning, setIsRunning] = useState(false);
   const [responseText, setResponseText] = useState('');
-  const [stream, setStream] = useState<MediaStream | null>(null);
-  const isRunningRef = useRef(false);
+  const audioEl = useRef<HTMLAudioElement>(null);
 
-  const startConversation = async () => {
-    const micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    setStream(micStream);
-    isRunningRef.current = true;
-    setIsRunning(true);
-    await runConversationLoop({
-      stream: micStream,
-      nativeLanguage,
-      learningLanguage: desiredLanguage,
-      setResponseText,
-      isRunningRef,
-      firstName: session?.user?.name?.split(' ')[0] || 'there',
-    });
-  };
-
-  const stopConversation = () => {
-    isRunningRef.current = false;
-    stopAudioPlayback();
-    stream?.getTracks().forEach((track) => track.stop());
-    setStream(null);
-    setIsRunning(false);
-  };
+  const {
+    status,
+    isSessionActive,
+    handleStartStopClick,
+    audioStreamRef,
+    currentVolume,
+    conversation,
+    sendTextMessage
+  } = useWebRTCAudioSession()
 
   const isLanguageSelectionComplete = nativeLanguage && desiredLanguage;
 
   return (
     <Box sx={{ 
       minHeight: '100vh',
-      bgcolor: '#f9f6f1',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      py: 4,
+      bgcolor: '#f9f6f1'
     }}>
-      <Box position="absolute" top="20px" left="20px">
-        <Typography variant="h4" sx={{ color: 'primary.main' }}>LinguaAI</Typography>
-        <Typography variant="subtitle1" sx={{ color: 'text.secondary' }}>
-          Welcome, {session?.user?.name}
-        </Typography>
-      </Box>
+      <Navbar />
       
       <Box 
         display="flex" 
         flexDirection="column" 
         alignItems="center" 
-        maxWidth="600px" 
-        width="100%" 
-        p={3}
-        sx={{ transform: 'translateY(-10%)' }}
+        justifyContent="center"
+        sx={{ 
+          minHeight: 'calc(100vh - 80px)',
+          padding: '20px',
+          gap: '20px'
+        }}
       >
-        <Box display="flex" justifyContent="center" mb={3}>
-          <Select 
-            value={nativeLanguage} 
-            onChange={(e) => setNativeLanguage(e.target.value)} 
-            sx={{ 
-              mr: 1.5,
-              width: '200px',
-              bgcolor: 'white',
-              '& .MuiSelect-select': {
-                color: 'text.primary',
-              },
-            }}
+        {/* Language Selection */}
+        <Box display="flex" gap="20px" alignItems="center">
+          <Select
+            value={nativeLanguage}
+            onChange={(e) => setNativeLanguage(e.target.value)}
             displayEmpty
-            renderValue={(value) => {
-              if (!value) return <span>Select Native Language</span>;
-              return <span>{value === 'en' ? 'English' : 'Spanish'}</span>;
-            }}
-            disabled={isRunning}
+            sx={{ minWidth: 150, backgroundColor: 'white' }}
           >
+            <MenuItem value="">Native Language</MenuItem>
             <MenuItem value="en">English</MenuItem>
             <MenuItem value="es">Spanish</MenuItem>
+            <MenuItem value="fr">French</MenuItem>
+            <MenuItem value="de">German</MenuItem>
+            <MenuItem value="it">Italian</MenuItem>
+            <MenuItem value="pt">Portuguese</MenuItem>
           </Select>
-          <Select 
-            value={desiredLanguage} 
+
+          <Select
+            value={desiredLanguage}
             onChange={(e) => setDesiredLanguage(e.target.value)}
-            sx={{ 
-              width: '200px',
-              bgcolor: 'white',
-              '& .MuiSelect-select': {
-                color: 'text.primary',
-              },
-            }}
             displayEmpty
-            renderValue={(value) => {
-              if (!value) return <span>Select Desired Language</span>;
-              return <span>{value === 'en' ? 'English' : 'Spanish'}</span>;
-            }}
-            disabled={isRunning}
+            sx={{ minWidth: 150, backgroundColor: 'white' }}
+            
           >
+            <MenuItem value="">Target Language</MenuItem>
             <MenuItem value="en">English</MenuItem>
             <MenuItem value="es">Spanish</MenuItem>
+            <MenuItem value="fr">French</MenuItem>
+            <MenuItem value="de">German</MenuItem>
+            <MenuItem value="it">Italian</MenuItem>
+            <MenuItem value="pt">Portuguese</MenuItem>
           </Select>
         </Box>
+
+
         
         {responseText && (
           <Box 
@@ -119,6 +90,7 @@ export default function Dashboard() {
             bgcolor="white"
             borderRadius="10px"
             width="100%"
+            maxWidth="600px"
             sx={{ wordWrap: 'break-word' }}
           >
             <Typography sx={{ fontFamily: 'Times New Roman, serif' }}>
@@ -127,25 +99,54 @@ export default function Dashboard() {
           </Box>
         )}
 
+        {/* Conversation History */}
+        {conversation.length > 0 && (
+          <Box 
+            p={2}
+            bgcolor="white"
+            borderRadius="10px"
+            width="100%"
+            maxWidth="600px"
+            sx={{ maxHeight: '200px', overflow: 'auto' }}
+          >
+            <Typography variant="h6" gutterBottom>Conversation</Typography>
+            {conversation.map((msg, idx) => (
+              <Box key={idx} mb={1}>
+                <Typography variant="caption" color="text.secondary">
+                  {msg.role} ({msg.status}):
+                </Typography>
+                <Typography>{msg.text || "..."}</Typography>
+              </Box>
+            ))}
+          </Box>
+        )}
+
         <Box marginBottom="20px">
-          <MicVisualizer stream={stream} isSpeaking={isRunning} />
+          <MicVisualizer 
+            stream={audioStreamRef.current} 
+            isSpeaking={isSessionActive && currentVolume > 0.1}
+          />
         </Box>
 
         <IconButton 
-          style={{ 
-            backgroundColor: isRunning ? 'red' : (isLanguageSelectionComplete ? 'orange' : '#cccccc'), 
-            color: 'white', 
-            width: '60px', 
-            height: '60px',
-            transition: 'background-color 0.3s'
+          style={{
+            backgroundColor: isSessionActive 
+              ? 'red' 
+              : 'green',
+            color: 'white',
+            width: '80px',
+            height: '80px',
+            fontSize: '2rem'
           }}
-          onClick={isRunning ? stopConversation : startConversation}
-          disabled={!isLanguageSelectionComplete}
+          onClick={handleStartStopClick}
+          /* disabled={!isLanguageSelectionComplete} */
         >
-          {isRunning ? <StopIcon /> : <MicIcon />}
+          {isSessionActive ? <StopIcon fontSize="large" /> : <MicIcon fontSize="large" />}
         </IconButton>
 
-        {isRunning && <Typography style={{ marginTop: '10px', color: '#000000' }}>Session active. Click to stop.</Typography>}
+
+
+        <audio ref={audioEl} />
       </Box>
     </Box>
   );

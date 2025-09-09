@@ -124,7 +124,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "/Users/iangoodman/Documents/dev/linguaai/src/generated/prisma",
+      "value": "/Users/iangoodman/Documents/linguaAI/src/generated/prisma",
       "fromEnvVar": null
     },
     "config": {
@@ -138,7 +138,7 @@ const config = {
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "/Users/iangoodman/Documents/dev/linguaai/prisma/schema.prisma",
+    "sourceFilePath": "/Users/iangoodman/Documents/linguaAI/prisma/schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
@@ -152,12 +152,11 @@ const config = {
     "db"
   ],
   "activeProvider": "postgresql",
-  "postinstall": true,
   "inlineDatasources": {
     "db": {
       "url": {
         "fromEnvVar": "DATABASE_URL",
-        "value": null
+        "value": "postgresql://postgres:postgres@localhost:5432/linguaai"
       }
     }
   },

@@ -16,6 +16,16 @@ const theme = createTheme({
   typography: {
     fontFamily: 'var(--font-manrope)',
   },
+  spacing: 8, // Ensure consistent spacing
+  components: {
+    MuiTextField: {
+      styleOverrides: {
+        root: {
+          marginBottom: '24px', // Add explicit margin bottom for form fields
+        },
+      },
+    },
+  },
 });
 
 export default function ThemeRegistry({ children }: { children: React.ReactNode }) {

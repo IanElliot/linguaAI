@@ -155,7 +155,7 @@ export default function SignUp() {
           width: '100%',
           display: 'flex',
           flexDirection: 'column',
-          gap: 2.5,
+          gap: 3,
         }}
       >
         <FormTextField
