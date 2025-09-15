@@ -3,7 +3,7 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { Box, CircularProgress } from '@mui/material';
+import { Box, CircularProgress, Typography } from '@mui/material';
 
 export default function Home() {
   const { data: session, status } = useSession();
@@ -28,7 +28,12 @@ export default function Home() {
         bgcolor: '#f9f6f1'
       }}
     >
-      <CircularProgress />
+      <Box sx={{ textAlign: 'center' }}>
+        <CircularProgress />
+        <Typography variant="body1" sx={{ mt: 2, color: 'text.secondary' }}>
+          Loading...
+        </Typography>
+      </Box>
     </Box>
   );
 }
