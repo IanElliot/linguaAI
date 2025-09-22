@@ -35,13 +35,13 @@ export default function Home() {
       }}
     >
       <Box sx={{ textAlign: 'center' }}>
-        <CircularProgress />
-        <Typography 
-          variant="body1" 
-          sx={{ 
-            mt: 2, 
+        <CircularProgress size={45} />
+        <Typography
+          variant="body1"
+          sx={{
+            mt: 2,
             color: 'text.secondary',
-            animation: `${pulseAnimation} 2s infinite`
+            animation: `${pulseAnimation} 2s infinite`,
           }}
         >
           Loading...
