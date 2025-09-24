@@ -39,7 +39,7 @@ export default function Home() {
         <Typography
           variant="body1"
           sx={{
-            mt: 2,
+            mt: 2.5,
             color: 'text.secondary',
             animation: `${pulseAnimation} 2s infinite`,
           }}
